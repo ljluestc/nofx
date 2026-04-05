@@ -121,6 +121,7 @@ func NewOKXTrader(apiKey, secretKey, passphrase string) *OKXTrader {
 		apiKey:           apiKey,
 		secretKey:        secretKey,
 		passphrase:       passphrase,
+		isCrossMargin:    true, // Default to cross margin (matches previous hardcoded behavior)
 		httpClient:       httpClient,
 		cacheDuration:    15 * time.Second,
 		instrumentsCache: make(map[string]*OKXInstrument),
@@ -184,6 +185,14 @@ func (t *OKXTrader) setPositionMode() error {
 
 	logger.Infof("  ✓ OKX account switched to dual position mode")
 	return nil
+}
+
+// tdMode returns the trade mode string based on stored margin mode preference.
+func (t *OKXTrader) tdMode() string {
+	if t.isCrossMargin {
+		return "cross"
+	}
+	return "isolated"
 }
 
 // sign generates OKX API signature

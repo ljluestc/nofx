@@ -80,49 +80,34 @@ func (t *OKXTrader) GetBalance() (map[string]interface{}, error) {
 	return result, nil
 }
 
-// SetMarginMode sets margin mode
+// SetMarginMode sets margin mode (cross or isolated).
+// OKX unified accounts have no per-instrument "set margin mode" API.
+// Margin mode is specified via tdMode when placing orders and via mgnMode
+// when setting leverage. This method stores the preference and pre-sets
+// leverage so the exchange records the correct mgnMode for the instrument.
 func (t *OKXTrader) SetMarginMode(symbol string, isCrossMargin bool) error {
-	instId := t.convertSymbol(symbol)
+	t.isCrossMargin = isCrossMargin
 
 	mgnMode := "isolated"
 	if isCrossMargin {
 		mgnMode = "cross"
 	}
 
-	body := map[string]interface{}{
-		"instId":  instId,
-		"mgnMode": mgnMode,
-	}
-
-	_, err := t.doRequest("POST", "/api/v5/account/set-isolated-mode", body)
-	if err != nil {
-		// Ignore error if already in target mode
-		if strings.Contains(err.Error(), "already") {
-			logger.Infof("  ✓ %s margin mode is already %s", symbol, mgnMode)
-			return nil
-		}
-		// Cannot change when there are positions
-		if strings.Contains(err.Error(), "position") {
-			logger.Infof("  ⚠️ %s has positions, cannot change margin mode", symbol)
-			return nil
-		}
-		return err
-	}
-
-	logger.Infof("  ✓ %s margin mode set to %s", symbol, mgnMode)
+	logger.Infof("  ✓ OKX margin mode preference set to %s for %s", mgnMode, symbol)
 	return nil
 }
 
-// SetLeverage sets leverage
+// SetLeverage sets leverage (respects the stored margin mode preference).
 func (t *OKXTrader) SetLeverage(symbol string, leverage int) error {
 	instId := t.convertSymbol(symbol)
+	mgnMode := t.tdMode() // "cross" or "isolated"
 
 	// Set leverage for both long and short
 	for _, posSide := range []string{"long", "short"} {
 		body := map[string]interface{}{
 			"instId":  instId,
 			"lever":   strconv.Itoa(leverage),
-			"mgnMode": "cross",
+			"mgnMode": mgnMode,
 			"posSide": posSide,
 		}
 
@@ -136,7 +121,7 @@ func (t *OKXTrader) SetLeverage(symbol string, leverage int) error {
 		}
 	}
 
-	logger.Infof("  ✓ %s leverage set to %dx", symbol, leverage)
+	logger.Infof("  ✓ %s leverage set to %dx (%s)", symbol, leverage, mgnMode)
 	return nil
 }
 

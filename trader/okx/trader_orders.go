@@ -43,7 +43,7 @@ func (t *OKXTrader) OpenLong(symbol string, quantity float64, leverage int) (map
 
 	body := map[string]interface{}{
 		"instId":  instId,
-		"tdMode":  "cross",
+		"tdMode":  t.tdMode(),
 		"side":    "buy",
 		"posSide": "long",
 		"ordType": "market",
@@ -120,7 +120,7 @@ func (t *OKXTrader) OpenShort(symbol string, quantity float64, leverage int) (ma
 
 	body := map[string]interface{}{
 		"instId":  instId,
-		"tdMode":  "cross",
+		"tdMode":  t.tdMode(),
 		"side":    "sell",
 		"posSide": "short",
 		"ordType": "market",
@@ -412,7 +412,7 @@ func (t *OKXTrader) SetStopLoss(symbol string, positionSide string, quantity, st
 
 	body := map[string]interface{}{
 		"instId":      instId,
-		"tdMode":      "cross",
+		"tdMode":      t.tdMode(),
 		"side":        side,
 		"posSide":     posSide,
 		"ordType":     "conditional",
@@ -455,7 +455,7 @@ func (t *OKXTrader) SetTakeProfit(symbol string, positionSide string, quantity, 
 
 	body := map[string]interface{}{
 		"instId":      instId,
-		"tdMode":      "cross",
+		"tdMode":      t.tdMode(),
 		"side":        side,
 		"posSide":     posSide,
 		"ordType":     "conditional",
@@ -817,7 +817,7 @@ func (t *OKXTrader) PlaceLimitOrder(req *types.LimitOrderRequest) (*types.LimitO
 
 	body := map[string]interface{}{
 		"instId":  instId,
-		"tdMode":  "cross",
+		"tdMode":  t.tdMode(),
 		"side":    side,
 		"posSide": posSide,
 		"ordType": "limit",
